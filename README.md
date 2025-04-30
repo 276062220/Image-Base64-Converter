@@ -47,4 +47,7 @@
 1. 直接双击HTML文件在浏览器中打开
 2. 或部署到任意Web服务器
 
+## 在线地址
+[Image-Base64-Converter](https://scqilin.github.io/Image-Base64-Converter/)
+
 
