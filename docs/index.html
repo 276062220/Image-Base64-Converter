@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Image-Base64-Converter</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f5f5f5;
+        box-sizing: border-box;
+      }
+      * {
+        box-sizing: inherit;
+      }
+      .container {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        overflow: hidden;
+      }
+      h1 {
+        color: #333;
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1.5rem;
+      }
+      .tabs {
+        display: flex;
+        margin-bottom: -1px;
+      }
+      .tab {
+        padding: 10px 20px;
+        cursor: pointer;
+        background: #f1f1f1;
+        border: 1px solid #ddd;
+        border-bottom: none;
+        border-radius: 5px 5px 0 0;
+        margin-right: 5px;
+        transition: all 0.2s;
+      }
+      .tab.active {
+        background: white;
+        border-bottom: 1px solid white;
+        font-weight: bold;
+      }
+      .tab-content {
+        display: none;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-top: none;
+        border-radius: 0 0 5px 5px;
+        background: white;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      textarea {
+        width: 100%;
+        height: 200px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: monospace;
+        resize: none;
+        margin-bottom: 15px;
+        font-size: 14px;
+      }
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 15px;
+        flex-wrap: wrap;
+        align-items: flex-end;
+        font-size: 14px;
+      }
+      button,
+      .file-upload-button {
+        padding: 10px 16px;
+        min-height: 40px;
+        background: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background 0.3s;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+      button:hover,
+      .file-upload-button:hover {
+        background: #45a049;
+      }
+      button.secondary,
+      .file-upload-button {
+        background: #2196f3;
+      }
+      button.secondary:hover,
+      .file-upload-button:hover {
+        background: #0b7dda;
+      }
+      button.danger {
+        background: #f44336;
+      }
+      button.danger:hover {
+        background: #d32f2f;
+      }
+      button:disabled {
+        background: #cccccc;
+        cursor: not-allowed;
+      }
+      #imagePreview {
+        margin-top: 15px;
+        text-align: center;
+        min-height: 100px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      #imagePreview img {
+        max-width: 100%;
+        max-height: 300px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      .info-text {
+        color: #666;
+        font-size: 13px;
+        margin-top: 10px;
+        line-height: 1.5;
+      }
+      label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        cursor: pointer;
+      }
+      #fileInput {
+        display: none;
+      }
+      .toast {
+        position: fixed;
+        top: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 4px;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .toast.show {
+        opacity: 1;
+      }
+      #pasteButton {
+        background: #2196f3;
+      }
+      #pasteButton:hover {
+        background: #0b7dda;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>图片 ↔ Base64转换工具 (离线版本)</h1>
+
+      <!-- Tab 标签 -->
+      <div class="tabs">
+        <div class="tab active" onclick="switchTab('toBase64')">
+          图片 → Base64
+        </div>
+        <div class="tab" onclick="switchTab('toImage')">Base64 → 图片</div>
+      </div>
+
+      <!-- 图片转 Base64 (自动转换版) -->
+      <div id="toBase64" class="tab-content active">
+        <textarea
+          id="base64Output"
+          placeholder="Base64 结果会显示在这里"
+          readonly
+        ></textarea>
+
+        <div class="button-group">
+          <label class="file-upload-button">
+            上传图片
+            <input type="file" id="fileInput" accept="image/*" />
+          </label>
+          <button onclick="copyBase64()">复制</button>
+          <button class="danger" onclick="clearBase64()">清除</button>
+          <div>
+            <span>图片大小：</span>
+            <span id="imageSize">0 KB</span>
+          </div>
+        </div>
+
+        <p class="info-text">
+          使用说明：<br />
+          1. 点击"上传图片" → 自动转换为Base64<br />
+          2. 点击复制可以复制Base64文本到剪贴板中
+        </p>
+      </div>
+
+      <!-- Base64 转图片 (优化版) -->
+      <div id="toImage" class="tab-content">
+        <textarea
+          id="base64Input"
+          placeholder="粘贴 Base64 文本（如 data:image/png;base64,...）"
+        ></textarea>
+
+        <div class="button-group">
+          <button id="pasteButton" onclick="pasteBase64()">粘贴</button>
+          <button onclick="convertToImage()">转换为图片</button>
+          <button
+            id="downloadBtn"
+            class="secondary"
+            disabled
+            onclick="downloadImage()"
+          >
+            下载图片
+          </button>
+          <button class="danger" onclick="clearImage()">清除</button>
+        </div>
+
+        <div id="imagePreview">
+          <p style="color: #999; text-align: center">图片预览区</p>
+        </div>
+
+        <p class="info-text">
+          使用说明：<br />
+          1. 点击"粘贴"按钮，自动粘贴Base64编码，粘贴成功后会自动执行转换<br />
+          2. 或手动使用Ctrl+V粘贴Base64编码，然后点击转换为图片按钮<br />
+          3. 转换成功后可以点击下载图片按钮
+        </p>
+      </div>
+    </div>
+    <div id="toast" class="toast"></div>
+    <script>
+      // 切换 Tab
+      function switchTab(tabId) {
+        document.querySelectorAll(".tab-content").forEach((content) => {
+          content.classList.remove("active");
+        });
+        document.querySelectorAll(".tab").forEach((tab) => {
+          tab.classList.remove("active");
+        });
+        document.getElementById(tabId).classList.add("active");
+        event.currentTarget.classList.add("active");
+      }
+
+      // 图片 → Base64 (自动触发)
+      document
+        .getElementById("fileInput")
+        .addEventListener("change", function (e) {
+          const file = e.target.files[0];
+          if (!file) return;
+
+          // 显示文件大小
+          const fileSizeInBytes = file.size;
+          let fileSizeInKB = fileSizeInBytes / 1024;
+          // 保留2位小数
+          fileSizeInKB = fileSizeInKB.toFixed(2);
+          document.getElementById("imageSize").textContent =
+          fileSizeInKB + " KB";
+          const reader = new FileReader();
+          reader.onload = async (e) => {
+            const base64Output = document.getElementById("base64Output");
+            base64Output.value = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
+
+      async function copyToClipboard(text) {
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast("复制成功！");
+          return true;
+        } catch (err) {
+          console.error("复制失败:", err);
+          showToast("复制失败，请手动选择文本后按Ctrl+C复制");
+          return false;
+        }
+      }
+
+      // 手动复制 Base64
+      async function copyBase64() {
+        const base64Output = document.getElementById("base64Output");
+        if (!base64Output.value) {
+          showToast("没有可复制的 Base64 内容！");
+          return;
+        }
+        const success = await copyToClipboard(base64Output.value);
+        if (success) showToast("复制成功！");
+      }
+
+      // 清除 Base64
+      function clearBase64() {
+        document.getElementById("base64Output").value = "";
+        document.getElementById("fileInput").value = "";
+        document.getElementById("imageSize").textContent = "0 KB";
+      }
+
+      // Base64 → 图片
+      function convertToImage() {
+        const base64Input = document.getElementById("base64Input").value.trim();
+        if (!base64Input) {
+          alert("请输入 Base64 文本！");
+          return;
+        }
+
+        const img = document.createElement("img");
+        img.src = base64Input;
+        img.onload = () => {
+          const preview = document.getElementById("imagePreview");
+          preview.innerHTML = "";
+          preview.appendChild(img);
+          document.getElementById("downloadBtn").disabled = false;
+        };
+        img.onerror = () => {
+          alert("Base64 格式错误，请检查！");
+          document.getElementById("downloadBtn").disabled = true;
+        };
+      }
+
+      // 下载图片
+      function downloadImage() {
+        const base64Input = document.getElementById("base64Input").value.trim();
+        if (!base64Input) return;
+
+        const link = document.createElement("a");
+        link.href = base64Input;
+        link.download = "image_" + new Date().getTime() + ".png";
+        link.click();
+      }
+
+      function clearImage() {
+        document.getElementById("base64Input").value = "";
+        document.getElementById("imagePreview").innerHTML =
+          '<p style="color: #999; text-align: center">图片预览区</p>';
+        document.getElementById("downloadBtn").disabled = true;
+      }
+
+      // Toast提示
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        setTimeout(() => {
+          toast.classList.remove("show");
+        }, 2000);
+      }
+
+      // 粘贴Base64内容
+      async function pasteBase64() {
+        try {
+          const text = await navigator.clipboard.readText();
+          const base64Input = document.getElementById("base64Input");
+          base64Input.value = text;
+          base64Input.dispatchEvent(new Event("input")); // 触发输入事件以启用转换按钮
+          showToast("粘贴成功！");
+          convertToImage();
+        } catch (err) {
+          showToast("粘贴失败，请确保已复制Base64内容");
+          console.error("粘贴失败:", err);
+        }
+      }
+    </script>
+  </body>
+</html>
