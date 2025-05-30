@@ -193,6 +193,7 @@
             上传图片
             <input type="file" id="fileInput" accept="image/*" />
           </label>
+          <button id="pasteImageBtn" onclick="pasteImage()">粘贴图片</button>
           <button onclick="copyBase64()">复制</button>
           <button class="danger" onclick="clearBase64()">清除</button>
           <div>
@@ -203,8 +204,9 @@
 
         <p class="info-text">
           使用说明：<br />
-          1. 点击"上传图片" → 自动转换为Base64<br />
-          2. 点击复制可以复制Base64文本到剪贴板中
+          1. 点击"上传图片" → 自动转换为Base64（支持从剪贴板粘贴图片）。<br />
+          2. 点击复制可以复制Base64文本到剪贴板中。<br />
+          3. 点击"清除"可以清空所有输入和输出。
         </p>
       </div>
 
@@ -235,9 +237,9 @@
 
         <p class="info-text">
           使用说明：<br />
-          1. 点击"粘贴"按钮，自动粘贴Base64编码，粘贴成功后会自动执行转换<br />
-          2. 或手动使用Ctrl+V粘贴Base64编码，然后点击转换为图片按钮<br />
-          3. 转换成功后可以点击下载图片按钮
+          1. 点击"粘贴"按钮，自动粘贴Base64编码，粘贴成功后会自动执行转换。<br />
+          2. 或手动使用Ctrl+V粘贴Base64编码，然后点击转换为图片按钮。<br />
+          3. 转换成功后可以点击下载图片按钮。
         </p>
       </div>
     </div>
@@ -298,6 +300,37 @@
         }
         const success = await copyToClipboard(base64Output.value);
         if (success) showToast("复制成功！");
+      }
+
+      // 从剪贴板粘贴图片
+      async function pasteImage() {
+        try {
+          const clipboardItems = await navigator.clipboard.read();
+          for (const clipboardItem of clipboardItems) {
+            for (const type of clipboardItem.types) {
+              if (type.startsWith('image/')) {
+                const blob = await clipboardItem.getType(type);
+                const fileSizeInBytes = blob.size;
+                let fileSizeInKB = fileSizeInBytes / 1024;
+                fileSizeInKB = fileSizeInKB.toFixed(2);
+                document.getElementById("imageSize").textContent =
+                  fileSizeInKB + " KB";
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                  document.getElementById("base64Output").value = e.target.result;
+                  showToast("图片粘贴成功！");
+                };
+                reader.readAsDataURL(blob);
+                return;
+              }
+            }
+          }
+          showToast("剪贴板中没有图片");
+        } catch (err) {
+          console.error("粘贴图片失败:", err);
+          showToast("粘贴图片失败，请确保已复制图片");
+        }
       }
 
       // 清除 Base64
