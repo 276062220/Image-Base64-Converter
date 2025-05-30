@@ -5,7 +5,7 @@
 ## 功能特点
 
 - **双向转换**：
-  - 图片 → Base64：上传图片自动转换为Base64编码
+  - 图片 → Base64：上传图片（支持从剪切板获取图片）自动转换为Base64编码
   - Base64 → 图片：粘贴Base64编码还原为图片并支持下载
 
 - **完全离线**：所有操作在浏览器本地完成，无需网络连接
@@ -48,6 +48,6 @@
 2. 或部署到任意Web服务器
 
 ## 在线地址
-[Image-Base64-Converter](https://scqilin.github.io/Image-Base64-Converter/)
+[在线地址](https://scqilin.github.io/Image-Base64-Converter/)
 
-
+[源码地址](https://github.com/scqilin/Image-Base64-Converter)
