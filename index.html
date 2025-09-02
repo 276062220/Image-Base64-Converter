@@ -349,7 +349,7 @@
         }
 
         const img = document.createElement("img");
-        img.src = base64Input;
+        img.src = 'data:image/jpeg;base64,' + base64Input;
         img.onload = () => {
           const preview = document.getElementById("imagePreview");
           preview.innerHTML = "";
